@@ -1,0 +1,190 @@
+[#Menu: Gateway of Tally]
+    Add : Item : "AZ M01 Voucher review register" : Display : TPAZM01 Report
+
+;; M01 Voucher review register
+;; v1.0 - 24 October 2026 - TallyPrime Edit Log target, exact release unverified.
+;; Read-only source. Compile and acceptance-test on an isolated restored company.
+;; Review index, not a financial total. Includes optional and cancelled records when exposed by the collection.
+
+[Report: TPAZM01 Report]
+    Form : TPAZM01 Form
+    Title : "Voucher review register"
+
+[Form: TPAZM01 Form]
+    Parts : TPAZM01 Intro, TPAZM01 Body
+    Width : 100% Screen
+    Height : 100% Screen
+    Buttons : TPAZM01 Print, TPAZM01 Export
+
+[Button: TPAZM01 Print]
+    Title : "Print"
+    Key : Alt + P
+    Action : Print Report
+
+[Button: TPAZM01 Export]
+    Title : "Export"
+    Key : Alt + E
+    Action : Export Report
+
+[Part: TPAZM01 Intro]
+    Lines : TPAZM01 Title, TPAZM01 Context, TPAZM01 Scope, TPAZM01 Note, TPAZM01 Count
+
+[Line: TPAZM01 Title]
+    Fields : TPAZM01 Title Field
+
+[Field: TPAZM01 Title Field]
+    Use : Name Field
+    Set As : "Voucher review register"
+    Full Width : Yes
+    Skip : Yes
+
+[Line: TPAZM01 Context]
+    Fields : TPAZM01 Context Field
+
+[Field: TPAZM01 Context Field]
+    Use : Name Field
+    Set As : "Company: " + ##SVCurrentCompany
+    Full Width : Yes
+    Skip : Yes
+
+[Line: TPAZM01 Scope]
+    Fields : TPAZM01 Scope Field
+
+[Field: TPAZM01 Scope Field]
+    Use : Name Field
+    Set As : "Period: " + $$String:##SVFromDate + " to " + $$String:##SVToDate + " (set period at Gateway, then reopen)"
+    Full Width : Yes
+    Skip : Yes
+
+[Line: TPAZM01 Note]
+    Fields : TPAZM01 Note Field
+
+[Field: TPAZM01 Note Field]
+    Use : Name Field
+    Set As : "Review index, not a financial total. Includes optional and cancelled records when exposed by the collection."
+    Full Width : Yes
+    Skip : Yes
+
+[Line: TPAZM01 Count]
+    Fields : TPAZM01 Count Field
+
+[Field: TPAZM01 Count Field]
+    Use : Name Field
+    Set As : "Rows: " + $$String:($$NumItems:TPAZM01 Collection) + " | Zero rows is NOT a clean-data certificate."
+    Full Width : Yes
+    Skip : Yes
+
+[Part: TPAZM01 Body]
+    Lines : TPAZM01 Header, TPAZM01 Row
+    Repeat : TPAZM01 Row : TPAZM01 Collection
+    Scroll : Vertical
+
+[Line: TPAZM01 Header]
+    Fields : TPAZM01 H0, TPAZM01 H1, TPAZM01 H2, TPAZM01 H3, TPAZM01 H4, TPAZM01 H5, TPAZM01 H6, TPAZM01 H7
+
+[Line: TPAZM01 Row]
+    Fields : TPAZM01 C0, TPAZM01 C1, TPAZM01 C2, TPAZM01 C3, TPAZM01 C4, TPAZM01 C5, TPAZM01 C6, TPAZM01 C7
+
+[Field: TPAZM01 H0]
+    Use : Name Field
+    Set As : "Date"
+    Width : 10
+    Skip : Yes
+
+[Field: TPAZM01 C0]
+    Use : Name Field
+    Set As : $$String:$Date
+    Width : 10
+    Skip : Yes
+
+[Field: TPAZM01 H1]
+    Use : Name Field
+    Set As : "Type"
+    Width : 15
+    Skip : Yes
+
+[Field: TPAZM01 C1]
+    Use : Name Field
+    Set As : $VoucherTypeName
+    Width : 15
+    Skip : Yes
+
+[Field: TPAZM01 H2]
+    Use : Name Field
+    Set As : "Number"
+    Width : 12
+    Skip : Yes
+
+[Field: TPAZM01 C2]
+    Use : Name Field
+    Set As : $VoucherNumber
+    Width : 12
+    Skip : Yes
+
+[Field: TPAZM01 H3]
+    Use : Name Field
+    Set As : "Party"
+    Width : 22
+    Skip : Yes
+
+[Field: TPAZM01 C3]
+    Use : Name Field
+    Set As : $PartyLedgerName
+    Width : 22
+    Skip : Yes
+
+[Field: TPAZM01 H4]
+    Use : Name Field
+    Set As : "Reference"
+    Width : 16
+    Skip : Yes
+
+[Field: TPAZM01 C4]
+    Use : Name Field
+    Set As : $Reference
+    Width : 16
+    Skip : Yes
+
+[Field: TPAZM01 H5]
+    Use : Name Field
+    Set As : "Narration"
+    Width : 25
+    Skip : Yes
+
+[Field: TPAZM01 C5]
+    Use : Name Field
+    Set As : $Narration
+    Width : 25
+    Skip : Yes
+
+[Field: TPAZM01 H6]
+    Use : Name Field
+    Set As : "Optional"
+    Width : 8
+    Skip : Yes
+
+[Field: TPAZM01 C6]
+    Use : Name Field
+    Set As : If $IsOptional Then "Yes" Else "No"
+    Width : 8
+    Skip : Yes
+
+[Field: TPAZM01 H7]
+    Use : Name Field
+    Set As : "Cancelled"
+    Width : 9
+    Skip : Yes
+
+[Field: TPAZM01 C7]
+    Use : Name Field
+    Set As : If $IsCancelled Then "Yes" Else "No"
+    Width : 9
+    Skip : Yes
+
+[Collection: TPAZM01 Collection]
+    Type : Voucher
+    Fetch : Date, VoucherTypeName, VoucherNumber, PartyLedgerName, Reference, Narration, IsOptional, IsCancelled
+    Filter : TPAZM01 Period
+
+[System: Formula]
+    TPAZM01 Period : ($Date >= ##SVFromDate) AND ($Date <= ##SVToDate)
